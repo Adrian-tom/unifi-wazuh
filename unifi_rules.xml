@@ -46,6 +46,22 @@
     <group>pci_dss_1.3.2,pci_dss_10.2.4,nist_800_53_SC-7,nist_800_53_AU-3,hipaa_164.312(e)(1),mitre_t1071</group>
   </rule>
 
+  <!-- low TTL packets -->
+  <rule id="100108" level="8">
+    <decoded_as>unifi-lan2lan</decoded_as>
+    <match>LAN_LAN</match>
+    <field name="uni_ttl">(?:[1-9]|1[0-5])</field>
+    <description>Low TTL packet detected on internal traffic: $(uni_ttl)</description>
+    <group>pci_dss_10.2.4,nist_800_53_SC-7,nist_800_53_AU-10,hipaa_164.312(e)(1)</group>
+  </rule>
+  <rule id="100109" level="8">
+    <decoded_as>unifi-lan2wan</decoded_as>
+    <match>LAN_WAN</match>
+    <field name="uni_ttl">(?:[1-9]|1[0-5])</field>
+    <description>Low TTL packet detected on external traffic: $(uni_ttl)</description>
+    <group>pci_dss_10.2.4,nist_800_53_SC-7,nist_800_53_AU-10,hipaa_164.312(e)(1)</group>
+  </rule>
+
   <!-- config changes -->
   <rule id="100110" level="8">
     <if_sid>100102</if_sid>
@@ -256,5 +272,19 @@
     <same_field>srcmac</same_field>
     <description>Multiple RADIUS Auth Failures for $(srcmac) (possible brute force)</description>
     <group>pci_dss_10.2.4,pci_dss_11.4,nist_800_53_IA-2,nist_800_53_SI-4,hipaa_164.312(d),mitre_t1110</group>
+  </rule>
+
+  <rule id="101000" level="10">
+    <if_sid>100102</if_sid>
+    <field name="uni_sfp_linkdown">.+</field>
+    <description>SFP link DOWN detected</description>
+    <group>unifi,sfp,network</group>
+  </rule>
+
+  <rule id="101001" level="8">
+    <if_sid>100102</if_sid>
+    <field name="uni_sfp_linkup">.+</field>
+    <description>SFP link UP detected</description>
+    <group>unifi,sfp,network</group>
   </rule>
 </group>

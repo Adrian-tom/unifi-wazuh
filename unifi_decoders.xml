@@ -11,14 +11,14 @@ Jul 30 05:35:34 udr7 CEF:0|Ubiquiti|UniFi Network|9.3.45|400|WiFi Client Connect
 <!-- traffic (syslog) -->
 <decoder name="unifi-lan2lan">
   <prematch>LAN_LAN</prematch>
-  <regex type="pcre2" offset="after_prematch">^-(\w)-\d+\] DESCR=\"(.*)\" IN=(\w+) OUT=(\w+) MAC=(\w{2}:\w{2}:\w{2}:\w{2}:\w{2}:\w{2}):(\w{2}:\w{2}:\w{2}:\w{2}:\w{2}:\w{2}):\w{2}:\w{2} SRC=(\d+\.\d+\.\d+\.\d+) DST=(\d+\.\d+\.\d+\.\d+) LEN=\d+ TOS=\d+ PREC=\w+ TTL=\d+ ID=\d+ PROTO=(\w+) SPT=(\d+) DPT=(\d+)</regex>
-  <order>type, uni_rulename, inbound, outbound, intmac, devmac, srcip, dstip, proto, srcprt, dstprt</order>
+  <regex type="pcre2" offset="after_prematch">^-(\w)-\d+\] DESCR=\"(.*)\" IN=(\w+) OUT=(\w+) MAC=(\w{2}:\w{2}:\w{2}:\w{2}:\w{2}:\w{2}):(\w{2}:\w{2}:\w{2}:\w{2}:\w{2}:\w{2}):\w{2}:\w{2} SRC=(\d+\.\d+\.\d+\.\d+) DST=(\d+\.\d+\.\d+\.\d+) LEN=\d+ TOS=\d+ PREC=\w+ TTL=(\d+) ID=\d+ PROTO=(\w+) SPT=(\d+) DPT=(\d+)</regex>
+  <order>type, uni_rulename, inbound, outbound, intmac, devmac, srcip, dstip, uni_ttl, proto, srcprt, dstprt</order>
 </decoder>
 
 <decoder name="unifi-lan2wan">
   <prematch>LAN_WAN</prematch>
-  <regex type="pcre2" offset="after_prematch">^-(\w)-\d+\] DESCR=\"(.*)\" IN=(\w+) OUT=(\w+) MAC=(\w{2}:\w{2}:\w{2}:\w{2}:\w{2}:\w{2}):(\w{2}:\w{2}:\w{2}:\w{2}:\w{2}:\w{2}):\w{2}:\w{2} SRC=(\d+\.\d+\.\d+\.\d+) DST=(\d+\.\d+\.\d+\.\d+) LEN=\d+ TOS=\d+ PREC=\w+ TTL=\d+ ID=\d+.*?PROTO=(\w+) SPT=(\d+) DPT=(\d+)</regex>
-  <order>type, uni_rulename, inbound, outbound, intmac, devmac, srcip, dstip, proto, srcprt, dstprt</order>
+  <regex type="pcre2" offset="after_prematch">^-(\w)-\d+\] DESCR=\"(.*)\" IN=(\w+) OUT=(\w+) MAC=(\w{2}:\w{2}:\w{2}:\w{2}:\w{2}:\w{2}):(\w{2}:\w{2}:\w{2}:\w{2}:\w{2}:\w{2}):\w{2}:\w{2} SRC=(\d+\.\d+\.\d+\.\d+) DST=(\d+\.\d+\.\d+\.\d+) LEN=\d+ TOS=\d+ PREC=\w+ TTL=(\d+) ID=\d+.*?PROTO=(\w+) SPT=(\d+) DPT=(\d+)</regex>
+  <order>type, uni_rulename, inbound, outbound, intmac, devmac, srcip, dstip, uni_ttl, proto, srcprt, dstprt</order>
 </decoder>
 
 <!-- base -->
@@ -241,4 +241,16 @@ Jul 30 05:35:34 udr7 CEF:0|Ubiquiti|UniFi Network|9.3.45|400|WiFi Client Connect
   <parent>unifi-hostapd</parent>
   <regex type="pcre2">(\S+): STA ([0-9a-fA-F:]{17}) [\w ]+ RADIUS (authentication|accounting) (succeeded|failed)</regex>
   <order>uni_iface, srcmac, uni_action, uni_radius_result</order>
+</decoder>
+
+<decoder name="unifi">
+    <parent>unifi</parent>
+    <regex type="pcre2"> msg=(.+link down.+)</regex>
+    <order>uni_sfp_linkdown</order>
+</decoder>
+
+<decoder name="unifi">
+    <parent>unifi</parent>
+    <regex type="pcre2"> msg=(.+link up.+)</regex>
+    <order>uni_sfp_linkup</order>
 </decoder>
