@@ -62,6 +62,27 @@
     <group>pci_dss_10.2.4,nist_800_53_SC-7,nist_800_53_AU-10,hipaa_164.312(e)(1)</group>
   </rule>
 
+  <rule id="100130" level="7">
+    <if_sid>100102</if_sid>
+    <field name="uni_pkt_len">^(?:[1-9]|[1-5]\d|6[0-3])$</field>
+    <description>Small packet detected: $(uni_pkt_len) bytes</description>
+    <group>pci_dss_10.2.4,nist_800_53_SC-7,hipaa_164.312(e)(1)</group>
+  </rule>
+
+  <rule id="110001" level="8">
+    <if_sid>100102</if_sid>
+    <field name="dstprt">^(23|445|3389)$</field>
+    <description>Połączenie do wrażliwego portu</description>
+    <group>pci_dss_10.2.4,nist_800_53_AC-17,hipaa_164.308(a)(1)</group>
+  </rule>
+
+  <rule id="110002" level="12" frequency="20" timeframe="60">
+    <if_matched_sid>110001</if_matched_sid>
+    <same_source_ip />
+    <description>Possible port scan detected</description>
+    <group>pci_dss_10.6,nist_800_53_SC-7,nist_800_53_CA-7,hipaa_164.312(e)(1)</group>
+  </rule>
+
   <!-- config changes -->
   <rule id="100110" level="8">
     <if_sid>100102</if_sid>
