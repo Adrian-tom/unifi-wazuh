@@ -9,7 +9,7 @@ Jul 30 05:35:34 udr7 CEF:0|Ubiquiti|UniFi Network|9.3.45|400|WiFi Client Connect
   <program_name>CEF</program_name>
 </decoder>
 
-<!-- traffic (syslog) -->
+<!-- traffic (syslog) - FIXED: Complete regex patterns -->
 <decoder name="unifi-lan2lan">
   <prematch>LAN_LAN</prematch>
   <regex type="pcre2" offset="after_prematch">^-(\w)-\d+\] DESCR="([^"]+)" IN=(\S+) OUT=(\S+) MAC=([0-9a-fA-F:]{17}):([0-9a-fA-F:]{17}):\S+ SRC=((?:(?:\d{1,3}\.){3}\d{1,3}|[0-9a-fA-F:]{2,39})) DST=((?:(?:\d{1,3}\.){3}\d{1,3}|[0-9a-fA-F:]{2,39})) TTL=(\d+) PROTO=(\w+).*SPT=(\d+).*DPT=(\d+)</regex>
@@ -36,7 +36,7 @@ Jul 30 05:35:34 udr7 CEF:0|Ubiquiti|UniFi Network|9.3.45|400|WiFi Client Connect
   <order>app_version, type, severity, message</order>
 </decoder>
 
-<!-- kv start -->
+<!-- kv start - Core event fields -->
 <decoder name="unifi">
   <parent>unifi</parent>
   <regex type="pcre2">UNIFIcategory=([^\s]+)</regex>
@@ -69,6 +69,12 @@ Jul 30 05:35:34 udr7 CEF:0|Ubiquiti|UniFi Network|9.3.45|400|WiFi Client Connect
 
 <decoder name="unifi">
   <parent>unifi</parent>
+  <regex type="pcre2">dst=((?:(?:\d{1,3}\.){3}\d{1,3}|[0-9a-fA-F:]{2,39}))</regex>
+  <order>dstip</order>
+</decoder>
+
+<decoder name="unifi">
+  <parent>unifi</parent>
   <regex type="pcre2">msg=(.+)$</regex>
   <order>message</order>
 </decoder>
@@ -92,7 +98,7 @@ Jul 30 05:35:34 udr7 CEF:0|Ubiquiti|UniFi Network|9.3.45|400|WiFi Client Connect
   <order>uni_changeagent</order>
 </decoder>
 
-<!-- wifi -->
+<!-- wifi - Client connection details -->
 <decoder name="unifi">
   <parent>unifi</parent>
   <regex type="pcre2">UNIFIclientAlias=([^\s]+)</regex>
@@ -107,17 +113,44 @@ Jul 30 05:35:34 udr7 CEF:0|Ubiquiti|UniFi Network|9.3.45|400|WiFi Client Connect
 
 <decoder name="unifi">
   <parent>unifi</parent>
+  <regex type="pcre2">UNIFIclientMac=([0-9a-fA-F:]{17})</regex>
+  <order>uni_clientmac</order>
+</decoder>
+
+<!-- NEW: Client type (wireless/wired) -->
+<decoder name="unifi">
+  <parent>unifi</parent>
+  <regex type="pcre2">UNIFIclientType=([^\s]+)</regex>
+  <order>uni_clienttype</order>
+</decoder>
+
+<!-- wifi - SSID and signal -->
+<decoder name="unifi">
+  <parent>unifi</parent>
   <regex type="pcre2">UNIFIwifiName=([^\s]+)</regex>
   <order>uni_ssid</order>
 </decoder>
 
 <decoder name="unifi">
   <parent>unifi</parent>
-  <regex type="pcre2">UNIFIWiFiRssi=([^\s]+)</regex>
+  <regex type="pcre2">UNIFIWiFiRssi=(-?(?:1[0-2][0-9]|[0-9]{1,2}))</regex>
   <order>uni_rssi</order>
 </decoder>
 
-<!-- threat -->
+<!-- NEW: WiFi channel and band -->
+<decoder name="unifi">
+  <parent>unifi</parent>
+  <regex type="pcre2">UNIFIchannel=(\d+)</regex>
+  <order>uni_wifi_channel</order>
+</decoder>
+
+<decoder name="unifi">
+  <parent>unifi</parent>
+  <regex type="pcre2">UNIFIband=([^\s]+)</regex>
+  <order>uni_wifi_band</order>
+</decoder>
+
+<!-- threat - IPS/Firewall -->
 <decoder name="unifi">
   <parent>unifi</parent>
   <regex type="pcre2">proto=(\w+)</regex>
@@ -128,6 +161,12 @@ Jul 30 05:35:34 udr7 CEF:0|Ubiquiti|UniFi Network|9.3.45|400|WiFi Client Connect
   <parent>unifi</parent>
   <regex type="pcre2">spt=(\d+)</regex>
   <order>srcprt</order>
+</decorator>
+
+<decoder name="unifi">
+  <parent>unifi</parent>
+  <regex type="pcre2">dpt=(\d+)</regex>
+  <order>dstprt</order>
 </decoder>
 
 <decoder name="unifi">
@@ -138,20 +177,21 @@ Jul 30 05:35:34 udr7 CEF:0|Ubiquiti|UniFi Network|9.3.45|400|WiFi Client Connect
 
 <decoder name="unifi">
   <parent>unifi</parent>
-  <regex type="pcre2">dst=((?:(?:\d{1,3}\.){3}\d{1,3}|[0-9a-fA-F:]{2,39}))</regex>
-  <order>dstip</order>
-</decoder>
-
-<decoder name="unifi">
-  <parent>unifi</parent>
-  <regex type="pcre2">dpt=(\d+)</regex>
-  <order>dstprt</order>
-</decoder>
-
-<decoder name="unifi">
-  <parent>unifi</parent>
   <regex type="pcre2">UNIFIrisk=(\w+)</regex>
   <order>uni_risk</order>
+</decoder>
+
+<!-- NEW: IPS severity and action -->
+<decoder name="unifi">
+  <parent>unifi</parent>
+  <regex type="pcre2">UNIFIseverity=([^\s]+)</regex>
+  <order>uni_severity</order>
+</decoder>
+
+<decoder name="unifi">
+  <parent>unifi</parent>
+  <regex type="pcre2">UNIFIaction=([^\s]+)</regex>
+  <order>uni_ips_action</order>
 </decoder>
 
 <decoder name="unifi">
@@ -166,19 +206,27 @@ Jul 30 05:35:34 udr7 CEF:0|Ubiquiti|UniFi Network|9.3.45|400|WiFi Client Connect
   <order>uni_sigid</order>
 </decoder>
 
+<!-- TCP flags for flow analysis -->
+<decoder name="unifi">
+  <parent>unifi</parent>
+  <regex type="pcre2">FLAGS=([^\s]+)</regex>
+  <order>tcp_flags</order>
+</decoder>
+
+<!-- Timestamp fields -->
 <decoder name="unifi">
   <parent>unifi</parent>
   <regex type="pcre2">UNIFIutcTime=([^\s]+)</regex>
   <order>uni_utctime</order>
 </decoder>
 
-<!-- client/device/network KV fields -->
 <decoder name="unifi">
   <parent>unifi</parent>
-  <regex type="pcre2">UNIFIclientMac=([0-9a-fA-F:]{17})</regex>
-  <order>uni_clientmac</order>
+  <regex type="pcre2">UNIFIeventTime=([^\s]+)</regex>
+  <order>uni_eventtime</order>
 </decoder>
 
+<!-- client/device/network KV fields -->
 <decoder name="unifi">
   <parent>unifi</parent>
   <regex type="pcre2">UNIFInetworkName=([^\s]+)</regex>
@@ -195,6 +243,13 @@ Jul 30 05:35:34 udr7 CEF:0|Ubiquiti|UniFi Network|9.3.45|400|WiFi Client Connect
   <parent>unifi</parent>
   <regex type="pcre2">UNIFInetworkVlan=(\d+)</regex>
   <order>uni_netvlan</order>
+</decoder>
+
+<!-- NEW: Connection type (LAN/WAN/VPN) -->
+<decoder name="unifi">
+  <parent>unifi</parent>
+  <regex type="pcre2">UNIFIconnectionType=([^\s]+)</regex>
+  <order>uni_conntype</order>
 </decoder>
 
 <decoder name="unifi">
@@ -250,6 +305,57 @@ Jul 30 05:35:34 udr7 CEF:0|Ubiquiti|UniFi Network|9.3.45|400|WiFi Client Connect
   <parent>unifi</parent>
   <regex type="pcre2">UNIFIportSpeed=([^\s]+)</regex>
   <order>uni_port_speed</order>
+</decoder>
+
+<!-- NEW: Port detailed information -->
+<decoder name="unifi">
+  <parent>unifi</parent>
+  <regex type="pcre2">UNIFIportId=([^\s]+)</regex>
+  <order>uni_port_id</order>
+</decoder>
+
+<decoder name="unifi">
+  <parent>unifi</parent>
+  <regex type="pcre2">UNIFIportPoe=([^\s]+)</regex>
+  <order>uni_port_poe</order>
+</decoder>
+
+<decoder name="unifi">
+  <parent>unifi</parent>
+  <regex type="pcre2">UNIFIportTx=(\d+)</regex>
+  <order>uni_port_tx_bytes</order>
+</decoder>
+
+<decoder name="unifi">
+  <parent>unifi</parent>
+  <regex type="pcre2">UNIFIportRx=(\d+)</regex>
+  <order>uni_port_rx_bytes</order>
+</decoder>
+
+<!-- VPN support -->
+<decoder name="unifi">
+  <parent>unifi</parent>
+  <regex type="pcre2">UNIFIvpnUser=([^\s]+)</regex>
+  <order>uni_vpn_user</order>
+</decoder>
+
+<decoder name="unifi">
+  <parent>unifi</parent>
+  <regex type="pcre2">UNIFIvpnStatus=([^\s]+)</regex>
+  <order>uni_vpn_status</order>
+</decoder>
+
+<!-- NEW: Throughput and bandwidth metrics -->
+<decoder name="unifi">
+  <parent>unifi</parent>
+  <regex type="pcre2">UNIFIthroughput=(\d+)</regex>
+  <order>uni_throughput</order>
+</decoder>
+
+<decoder name="unifi">
+  <parent>unifi</parent>
+  <regex type="pcre2">UNIFIbandwidth=(\d+)</regex>
+  <order>uni_bandwidth</order>
 </decoder>
 
 <!-- hostapd device syslog -->
