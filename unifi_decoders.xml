@@ -233,6 +233,25 @@ Jul 30 05:35:34 udr7 CEF:0|Ubiquiti|UniFi Network|9.3.45|400|WiFi Client Connect
   <order>uni_ipssessionid</order>
 </decoder>
 
+<!-- ethernet port status decoders -->
+<decoder name="unifi">
+  <parent>unifi</parent>
+  <regex type="pcre2">UNIFIportName=([^\s]+)</regex>
+  <order>uni_port_name</order>
+</decoder>
+
+<decoder name="unifi">
+  <parent>unifi</parent>
+  <regex type="pcre2">UNIFIportStatus=([^\s]+)</regex>
+  <order>uni_port_status</order>
+</decoder>
+
+<decoder name="unifi">
+  <parent>unifi</parent>
+  <regex type="pcre2">UNIFIportSpeed=([^\s]+)</regex>
+  <order>uni_port_speed</order>
+</decoder>
+
 <!-- hostapd device syslog -->
 <decoder name="unifi-hostapd">
   <program_name>hostapd</program_name>
@@ -250,6 +269,7 @@ Jul 30 05:35:34 udr7 CEF:0|Ubiquiti|UniFi Network|9.3.45|400|WiFi Client Connect
   <order>uni_iface, srcmac, uni_action, uni_radius_result</order>
 </decoder>
 
+<!-- SFP and Ethernet link status -->
 <decoder name="unifi">
     <parent>unifi</parent>
     <regex type="pcre2"> msg=(.+link down.+)</regex>
