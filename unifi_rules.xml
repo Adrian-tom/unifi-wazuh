@@ -308,7 +308,7 @@
     <group>pci_dss_10.2.4,pci_dss_11.4,nist_800_53_IA-2,nist_800_53_SI-4,hipaa_164.312(d),mitre_t1110</group>
   </rule>
 
-  <!-- Network connectivity alerts -->
+  <!-- Network connectivity alerts - SFP links -->
   <rule id="101000" level="10">
     <if_sid>100102</if_sid>
     <field name="uni_sfp_linkdown">.+</field>
@@ -321,5 +321,45 @@
     <field name="uni_sfp_linkup">.+</field>
     <description>SFP Link UP detected: $(uni_sfp_linkup)</description>
     <group>pci_dss_10.6,nist_800_53_CP-10,nist_800_53_SI-4,hipaa_164.312(b)</group>
+  </rule>
+
+  <!-- Ethernet port DOWN - higher severity for managed switch ports -->
+  <rule id="101010" level="8">
+    <if_sid>100102</if_sid>
+    <field name="uni_port_status">down</field>
+    <description>Ethernet Port DOWN on $(uni_devname) - Port: $(uni_port_name)</description>
+    <group>pci_dss_10.6,nist_800_53_CP-10,nist_800_53_SI-4,hipaa_164.312(b),mitre_t1498</group>
+  </rule>
+
+  <!-- Ethernet port UP - recovery detected -->
+  <rule id="101011" level="3">
+    <if_sid>100102</if_sid>
+    <field name="uni_port_status">up</field>
+    <description>Ethernet Port UP on $(uni_devname) - Port: $(uni_port_name)</description>
+    <group>pci_dss_10.6,nist_800_53_CP-10,nist_800_53_SI-4,hipaa_164.312(b)</group>
+  </rule>
+
+  <!-- Multiple Ethernet ports down - possible hardware failure or attack -->
+  <rule id="101020" level="10" frequency="3" timeframe="60">
+    <if_matched_sid>101010</if_matched_sid>
+    <same_field>uni_devname</same_field>
+    <description>Multiple Ethernet Ports DOWN on $(uni_devname) - Possible hardware failure or DDoS (3+ ports in 1 min)</description>
+    <group>pci_dss_10.6,nist_800_53_CP-10,nist_800_53_SI-4,hipaa_164.312(b),mitre_t1498</group>
+  </rule>
+
+  <!-- Critical: all ports on a device down -->
+  <rule id="101021" level="12" frequency="5" timeframe="30">
+    <if_matched_sid>101010</if_matched_sid>
+    <same_field>uni_devname</same_field>
+    <description>Critical: Most Ethernet Ports DOWN on $(uni_devname) - Device may be offline (5+ ports in 30 sec)</description>
+    <group>pci_dss_10.6,nist_800_53_CP-10,nist_800_53_SI-4,hipaa_164.312(b),mitre_t1498</group>
+  </rule>
+
+  <!-- Port speed degradation - potential link quality issue -->
+  <rule id="101030" level="5">
+    <if_sid>100102</if_sid>
+    <field name="uni_port_speed">10M|100M|half-duplex</field>
+    <description>Port speed degradation on $(uni_devname) - Port: $(uni_port_name) Speed: $(uni_port_speed)</description>
+    <group>pci_dss_10.6,nist_800_53_SI-4,hipaa_164.312(b)</group>
   </rule>
 </group>
