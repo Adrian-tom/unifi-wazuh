@@ -58,12 +58,22 @@ Tested using UniFi OS 5.1.12 + UniFi Network 10.4.57 + Wazuh 4.14.
 | 100203 | RADIUS Auth Success | 5 |
 | 100204 | RADIUS Auth Failed | 8 |
 
-### Network Events
+### Network & Link Status Events
 
 | Rule ID | Event | Level |
 |---------|-------|-------|
 | 101000 | SFP Link DOWN detected | 10 |
 | 101001 | SFP Link UP detected | 5 |
+| 101010 | Ethernet Port DOWN | 8 |
+| 101011 | Ethernet Port UP | 3 |
+
+### Ethernet Port Correlation Rules
+
+| Rule ID | Event | Threshold | Level |
+|---------|-------|-----------|-------|
+| 101020 | Multiple ports DOWN | 3+ in 1 min, same device | 10 |
+| 101021 | Critical: Most ports DOWN | 5+ in 30 sec, same device | 12 |
+| 101030 | Port speed degradation (10M/100M/half-duplex) | - | 5 |
 
 ### Correlation / Frequency Rules
 
@@ -122,6 +132,10 @@ Paste a sample UniFi syslog line to verify the correct decoder and rules match.
 - Better version parsing: supports variable-length versions (3.1, 4.3.9, 10.0.162)
 - Fixed message extraction with proper anchoring to prevent truncation
 - Improved MAC and IP patterns with explicit character classes
+- **Added Ethernet port status decoders:**
+  - `UNIFIportName` - Port identifier extraction
+  - `UNIFIportStatus` - Port status (up/down) extraction
+  - `UNIFIportSpeed` - Negotiated port speed extraction
 
 ### Rules
 - Fixed non-English descriptions (rule 110001: Polish → English)
@@ -134,6 +148,11 @@ Paste a sample UniFi syslog line to verify the correct decoder and rules match.
 - New rules:
   - **Rule 100131**: Detects UniFi system updates (level 10)
   - Enhanced SFP link detection (101000/101001) with better severity
+  - **Rule 101010**: Ethernet Port DOWN detection (level 8)
+  - **Rule 101011**: Ethernet Port UP/recovery (level 3)
+  - **Rule 101020**: Multiple ports DOWN correlation (3+ in 1 min, level 10) - detects hardware failures or DDoS
+  - **Rule 101021**: Critical port failure (5+ in 30 sec, level 12) - device offline indicator
+  - **Rule 101030**: Port speed degradation (10M/100M/half-duplex, level 5)
 - Reduced catch-all level: rule 100199 now level 2 (less noisy)
 - Better descriptions: thresholds included in descriptions for troubleshooting
 - Added MITRE ATT&CK mappings to new network-level rules
@@ -150,6 +169,10 @@ Paste a sample UniFi syslog line to verify the correct decoder and rules match.
 * Added rule 100131 for system update detection
 * Enhanced SFP link detection with compliance mappings
 * Reduced catch-all rule 100199 severity to level 2
+* **Added Ethernet port monitoring:**
+  - 3 new decoders for port status, name, and speed
+  - 5 new rules (101010-101030) for port state changes and degradation
+  - Correlation rules for bulk port failures (hardware/DDoS detection)
 
 2026-06-02:
 * Fixed a couple regex mappings (thanks driemekasten)
