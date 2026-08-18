@@ -10,11 +10,7 @@ Aug 18 10:34:10 core-sw1 <Crit:System.bootUp> System booting
 -->
 
 <decoder name="extreme-networks">
-  <prematch type="pcre2">&lt;(?:Crit|Erro|Warn|Info|Noti|Debg|Summ|Trac):[A-Za-z][A-Za-z0-9_.]*&gt;</prematch>
-</decoder>
-
-<decoder name="extreme-networks">
-  <prematch type="pcre2">&lt;[A-Za-z][A-Za-z0-9]*\.[A-Za-z][A-Za-z0-9_.]*&gt;</prematch>
+  <prematch type="pcre2">&lt;(?:((?:Crit|Erro|Warn|Info|Noti|Debg|Summ|Trac):)?[A-Za-z][A-Za-z0-9_.]*\.[A-Za-z][A-Za-z0-9_.]*)&gt;</prematch>
 </decoder>
 
 <decoder name="extreme-networks">
@@ -23,7 +19,7 @@ Aug 18 10:34:10 core-sw1 <Crit:System.bootUp> System booting
 
 <decoder name="extreme-networks-header">
   <parent>extreme-networks</parent>
-  <regex type="pcre2">&lt;(\w{4}):(([^.\s&gt;]+)\.([^&gt;]+))&gt;</regex>
+  <regex type="pcre2">&lt;([A-Za-z]+):(([^.\s&gt;]+)\.([^&gt;]+))&gt;</regex>
   <order>exos_severity, exos_event_id, exos_component, exos_event</order>
 </decoder>
 
@@ -31,18 +27,6 @@ Aug 18 10:34:10 core-sw1 <Crit:System.bootUp> System booting
   <parent>extreme-networks</parent>
   <regex type="pcre2">&lt;(([^.\s:&gt;]+)\.([^&gt;]+))&gt;</regex>
   <order>exos_event_id, exos_component, exos_event</order>
-</decoder>
-
-<decoder name="extreme-networks-message">
-  <parent>extreme-networks</parent>
-  <regex type="pcre2" offset="after_parent">^\s*:?\s*(.*)$</regex>
-  <order>exos_message</order>
-</decoder>
-
-<decoder name="extreme-networks-slot">
-  <parent>extreme-networks</parent>
-  <regex type="pcre2" offset="after_parent">Slot-(\d+):</regex>
-  <order>exos_slot</order>
 </decoder>
 
 <decoder name="extreme-networks-auth">
@@ -103,7 +87,7 @@ Aug 18 10:34:10 core-sw1 <Crit:System.bootUp> System booting
 
 <decoder name="extreme-networks-cli">
   <parent>extreme-networks</parent>
-  <prematch>cli.logRemoteCmd</prematch>
+  <prematch type="pcre2">cli\.logRemoteCmd</prematch>
   <regex type="pcre2">(?:&lt;(?:\w{4}:)?cli\.logRemoteCmd&gt;\s*)?(?:Slot-\d+:\s+)?((?:(?:\d{1,3}\.){3}\d{1,3}|[0-9A-Fa-f:]{2,39})) \((\S+)\) (\S+): (.+)$</regex>
   <order>srcip, exos_auth_type, exos_user, exos_cmd</order>
 </decoder>
@@ -117,8 +101,8 @@ Aug 18 10:34:10 core-sw1 <Crit:System.bootUp> System booting
 
 <decoder name="extreme-networks-cli-local">
   <parent>extreme-networks</parent>
-  <prematch>cli.logLocalCmd</prematch>
-  <regex type="pcre2">(?:&lt;(?:\w{4}:)?cli\.logLocalCmd&gt;\s*)?(?:Slot-\d+:\s+)?(\S+) (\S+): (.+)$</regex>
+  <prematch type="pcre2">cli\.logLocalCmd</prematch>
+  <regex type="pcre2">(?:&lt;(?:[A-Za-z]+:)?cli\.logLocalCmd&gt;\s*)?(?:Slot-\d+:\s+)?(console|serial|local) (\S+): (.+)$</regex>
   <order>exos_auth_type, exos_user, exos_cmd</order>
 </decoder>
 
@@ -132,34 +116,34 @@ Aug 18 10:34:10 core-sw1 <Crit:System.bootUp> System booting
 <decoder name="extreme-networks-port">
   <parent>extreme-networks</parent>
   <prematch type="pcre2">vlan\.msgs\.portLinkState|vlan\.dbg\.info|HAL\.Port\.Link</prematch>
-  <regex type="pcre2">(?:&lt;(?:\w{4}:)?(?:vlan\.(?:msgs\.portLinkState(?:Up|Down)|dbg\.info)|HAL\.Port\.Link(?:Up|Down))&gt;\s*)?(?:Slot-\d+:\s+)?Port (\S+) link (UP|up|down)(?: at speed ([^,]+?)(?: and ([^,]+))?)?$</regex>
+  <regex type="pcre2">(?:&lt;(?:\w{4}:)?(?:vlan\.(?:msgs\.portLinkState(?:Up|Down)|dbg\.info)|HAL\.Port\.Link(?:Up|Down))&gt;\s*)?(?:Slot-\d+:\s+)?Port (\S+) link (UP|up|DOWN|down)(?: at speed ([^,]+?)(?: and ([^,]+))?)?$</regex>
   <order>exos_port, exos_link_state, exos_link_speed, exos_link_duplex</order>
 </decoder>
 
 <decoder name="extreme-networks-vlan-created">
   <parent>extreme-networks</parent>
-  <prematch>VLAN.VlanCreated</prematch>
+  <prematch type="pcre2">VLAN\.VlanCreated</prematch>
   <regex type="pcre2">(?:&lt;(?:\w{4}:)?VLAN\.VlanCreated&gt;\s*)?VLAN (\d+) created</regex>
   <order>exos_vlan_id</order>
 </decoder>
 
 <decoder name="extreme-networks-vlan-created">
   <parent>extreme-networks</parent>
-  <prematch>VLAN.VlanCreated</prematch>
+  <prematch type="pcre2">VLAN\.VlanCreated</prematch>
   <regex type="pcre2">(?:&lt;(?:\w{4}:)?VLAN\.VlanCreated&gt;\s*)?VLAN ([\w.-]+) created with tag (\d+)</regex>
   <order>exos_vlan_name, exos_vlan_id</order>
 </decoder>
 
 <decoder name="extreme-networks-vlan-deleted">
   <parent>extreme-networks</parent>
-  <prematch>VLAN.VlanDeleted</prematch>
+  <prematch type="pcre2">VLAN\.VlanDeleted</prematch>
   <regex type="pcre2">(?:&lt;(?:\w{4}:)?VLAN\.VlanDeleted&gt;\s*)?VLAN (\d+) deleted</regex>
   <order>exos_vlan_id</order>
 </decoder>
 
 <decoder name="extreme-networks-vlan-deleted">
   <parent>extreme-networks</parent>
-  <prematch>VLAN.VlanDeleted</prematch>
+  <prematch type="pcre2">VLAN\.VlanDeleted</prematch>
   <regex type="pcre2">(?:&lt;(?:\w{4}:)?VLAN\.VlanDeleted&gt;\s*)?VLAN ([\w.-]+) deleted(?: with tag (\d+))?</regex>
   <order>exos_vlan_name, exos_vlan_id</order>
 </decoder>
@@ -187,28 +171,28 @@ Aug 18 10:34:10 core-sw1 <Crit:System.bootUp> System booting
 
 <decoder name="extreme-networks-bgp">
   <parent>extreme-networks</parent>
-  <prematch>BGP.</prematch>
+  <prematch type="pcre2">BGP\.</prematch>
   <regex type="pcre2">BGP neighbor ((?:(?:\d{1,3}\.){3}\d{1,3}|[0-9A-Fa-f:]{2,39})) (\w+)</regex>
   <order>exos_bgp_peer, exos_bgp_state</order>
 </decoder>
 
 <decoder name="extreme-networks-ospf">
   <parent>extreme-networks</parent>
-  <prematch>OSPF.</prematch>
+  <prematch type="pcre2">OSPF\.</prematch>
   <regex type="pcre2">OSPF neighbor ((?:(?:\d{1,3}\.){3}\d{1,3}|[0-9A-Fa-f:]{2,39})) on interface (\S+) (\w+)</regex>
   <order>exos_ospf_neighbor, exos_ospf_iface, exos_ospf_state</order>
 </decoder>
 
 <decoder name="extreme-networks-lacp">
   <parent>extreme-networks</parent>
-  <prematch>LACP.</prematch>
+  <prematch type="pcre2">LACP\.</prematch>
   <regex type="pcre2">LACP port (\S+) (\w+)</regex>
   <order>exos_port, exos_lacp_state</order>
 </decoder>
 
 <decoder name="extreme-networks-lldp">
   <parent>extreme-networks</parent>
-  <prematch>LLDP.</prematch>
+  <prematch type="pcre2">LLDP\.</prematch>
   <regex type="pcre2">LLDP neighbor ([\w.-]+) on port (\S+) (\w+)</regex>
   <order>exos_lldp_neighbor, exos_port, exos_lldp_event</order>
 </decoder>
@@ -236,14 +220,14 @@ Aug 18 10:34:10 core-sw1 <Crit:System.bootUp> System booting
 
 <decoder name="extreme-networks-system">
   <parent>extreme-networks</parent>
-  <prematch type="pcre2">System\.|boot|restart|reboot|shutdown</prematch>
-  <regex type="pcre2">(?:&lt;(?:\w{4}:)?System\.([A-Za-z0-9_.-]+)&gt;\s*)?(System (booting|restarting|rebooting|shutting down))</regex>
-  <order>exos_event, exos_system_event, exos_system_state</order>
+  <prematch type="pcre2">System\.</prematch>
+  <regex type="pcre2">System (booting|restarting|rebooting|shutting down)</regex>
+  <order>exos_system_state</order>
 </decoder>
 
 <decoder name="extreme-networks-hardware">
   <parent>extreme-networks</parent>
-  <prematch type="pcre2">Temperature|Power supply|fan|alarm|sensor</prematch>
+  <prematch type="pcre2">&lt;(?:[A-Za-z]+:)?[A-Za-z][A-Za-z0-9_.]*&gt;\s+.*(?:Temperature sensor|Power supply|[Ff]an\s+\d+|[Aa]larm|[Ss]ensor)</prematch>
   <regex type="pcre2">(Temperature sensor|Power supply \d+|Fan \d+):? (.+)$</regex>
   <order>exos_hw_component, exos_hw_state</order>
 </decoder>
@@ -252,10 +236,4 @@ Aug 18 10:34:10 core-sw1 <Crit:System.bootUp> System booting
   <parent>extreme-networks</parent>
   <regex type="pcre2">&lt;(?:\w{4}:)?([A-Za-z0-9_.-]+)&gt;\s*(?:Slot-\d+:\s+)?(.+)$</regex>
   <order>exos_event, exos_message</order>
-</decoder>
-
-<decoder name="extreme-networks-generic">
-  <parent>extreme-networks</parent>
-  <regex type="pcre2">^(.+)$</regex>
-  <order>exos_message</order>
 </decoder>
