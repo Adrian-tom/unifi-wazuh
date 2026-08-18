@@ -1,0 +1,253 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<group name="extreme-networks">
+
+  <!-- base rule (silent parent) -->
+  <rule id="110100" level="0">
+    <decoded_as>extreme-networks</decoded_as>
+    <description>Extreme Networks ExtremeXOS event</description>
+  </rule>
+
+  <!-- authentication success -->
+  <rule id="110101" level="3">
+    <if_sid>110100</if_sid>
+    <decoded_as>extreme-networks-auth</decoded_as>
+    <field name="exos_auth_result">successful</field>
+    <description>Extreme Networks: Authentication successful for user $(exos_user) from $(srcip)</description>
+    <group>pci_dss_10.2.5,nist_800_53_IA-2,nist_800_53_AU-3,hipaa_164.312(d),mitre_t1078</group>
+  </rule>
+
+  <!-- authentication failure -->
+  <rule id="110102" level="8">
+    <if_sid>110100</if_sid>
+    <decoded_as>extreme-networks-auth</decoded_as>
+    <field name="exos_auth_result">failed</field>
+    <description>Extreme Networks: Authentication failed for user $(exos_user) from $(srcip)</description>
+    <group>pci_dss_10.2.4,nist_800_53_IA-2,nist_800_53_AU-3,hipaa_164.312(d),mitre_t1110</group>
+  </rule>
+
+  <!-- local auth success -->
+  <rule id="110103" level="3">
+    <if_sid>110100</if_sid>
+    <decoded_as>extreme-networks-auth-local</decoded_as>
+    <field name="exos_auth_result">successful</field>
+    <description>Extreme Networks: Local authentication successful for user $(exos_user)</description>
+    <group>pci_dss_10.2.5,nist_800_53_IA-2,nist_800_53_AU-3,hipaa_164.312(d),mitre_t1078</group>
+  </rule>
+
+  <!-- local auth failure -->
+  <rule id="110104" level="8">
+    <if_sid>110100</if_sid>
+    <decoded_as>extreme-networks-auth-local</decoded_as>
+    <field name="exos_auth_result">failed</field>
+    <description>Extreme Networks: Local authentication failed for user $(exos_user)</description>
+    <group>pci_dss_10.2.4,nist_800_53_IA-2,nist_800_53_AU-3,hipaa_164.312(d),mitre_t1110</group>
+  </rule>
+
+  <!-- brute-force detection: multiple auth failures (remote) -->
+  <rule id="110110" level="10" frequency="5" timeframe="120">
+    <if_matched_sid>110102</if_matched_sid>
+    <same_source_ip />
+    <description>Extreme Networks: Brute-force attack - multiple auth failures from $(srcip) (5+ in 2 min)</description>
+    <group>pci_dss_10.2.4,pci_dss_11.4,nist_800_53_IA-2,nist_800_53_SI-4,hipaa_164.312(d),mitre_t1110</group>
+  </rule>
+
+  <!-- brute-force detection: multiple auth failures (local) -->
+  <rule id="110111" level="10" frequency="5" timeframe="120">
+    <if_matched_sid>110104</if_matched_sid>
+    <same_field>exos_user</same_field>
+    <description>Extreme Networks: Multiple local auth failures for user $(exos_user) (5+ in 2 min)</description>
+    <group>pci_dss_10.2.4,pci_dss_11.4,nist_800_53_IA-2,nist_800_53_SI-4,hipaa_164.312(d),mitre_t1110</group>
+  </rule>
+
+  <!-- user logout -->
+  <rule id="110112" level="3">
+    <if_sid>110100</if_sid>
+    <decoded_as>extreme-networks-auth-logout</decoded_as>
+    <description>Extreme Networks: User $(exos_user) logged out from $(srcip)</description>
+    <group>pci_dss_10.2.5,nist_800_53_AC-2,nist_800_53_AU-3,hipaa_164.312(b),mitre_t1078</group>
+  </rule>
+
+  <!-- remote CLI command -->
+  <rule id="110120" level="5">
+    <if_sid>110100</if_sid>
+    <decoded_as>extreme-networks-cli</decoded_as>
+    <description>Extreme Networks: Remote CLI command by $(exos_user) from $(srcip): $(exos_cmd)</description>
+    <group>pci_dss_10.2.2,pci_dss_10.5.5,nist_800_53_AC-6,nist_800_53_AU-3,hipaa_164.312(a)(1),mitre_t1059</group>
+  </rule>
+
+  <!-- local CLI command -->
+  <rule id="110121" level="3">
+    <if_sid>110100</if_sid>
+    <decoded_as>extreme-networks-cli-local</decoded_as>
+    <description>Extreme Networks: Local CLI command by $(exos_user): $(exos_cmd)</description>
+    <group>pci_dss_10.2.2,nist_800_53_AC-6,nist_800_53_AU-3,hipaa_164.312(a)(1),mitre_t1059</group>
+  </rule>
+
+  <!-- port link down -->
+  <rule id="110130" level="8">
+    <if_sid>110100</if_sid>
+    <decoded_as>extreme-networks-port</decoded_as>
+    <field name="exos_link_state">down</field>
+    <description>Extreme Networks: Port $(exos_port) link DOWN</description>
+    <group>pci_dss_10.6,nist_800_53_CP-10,nist_800_53_SI-4,hipaa_164.312(b),mitre_t1498</group>
+  </rule>
+
+  <!-- port link up -->
+  <rule id="110131" level="3">
+    <if_sid>110100</if_sid>
+    <decoded_as>extreme-networks-port</decoded_as>
+    <field name="exos_link_state">up</field>
+    <description>Extreme Networks: Port $(exos_port) link UP</description>
+    <group>pci_dss_10.6,nist_800_53_CP-10,nist_800_53_SI-4,hipaa_164.312(b)</group>
+  </rule>
+
+  <!-- multiple ports down - possible hardware failure or attack -->
+  <rule id="110132" level="10" frequency="3" timeframe="60">
+    <if_matched_sid>110130</if_matched_sid>
+    <description>Extreme Networks: Multiple ports DOWN (3+ in 1 min) - possible hardware failure or DDoS</description>
+    <group>pci_dss_10.6,nist_800_53_CP-10,nist_800_53_SI-4,hipaa_164.312(b),mitre_t1498</group>
+  </rule>
+
+  <!-- VLAN created -->
+  <rule id="110140" level="5">
+    <if_sid>110100</if_sid>
+    <decoded_as>extreme-networks-vlan-created</decoded_as>
+    <description>Extreme Networks: VLAN $(exos_vlan_id) created</description>
+    <group>pci_dss_10.5.5,nist_800_53_CM-3,nist_800_53_CM-6,hipaa_164.312(b),mitre_t1562</group>
+  </rule>
+
+  <!-- VLAN deleted -->
+  <rule id="110141" level="7">
+    <if_sid>110100</if_sid>
+    <decoded_as>extreme-networks-vlan-deleted</decoded_as>
+    <description>Extreme Networks: VLAN $(exos_vlan_id) deleted</description>
+    <group>pci_dss_10.5.5,nist_800_53_CM-3,nist_800_53_CM-6,hipaa_164.312(b),mitre_t1562</group>
+  </rule>
+
+  <!-- port added to VLAN -->
+  <rule id="110142" level="3">
+    <if_sid>110100</if_sid>
+    <decoded_as>extreme-networks-vlan-port</decoded_as>
+    <field name="exos_vlan_action">added to</field>
+    <description>Extreme Networks: Port $(exos_port) added to VLAN $(exos_vlan_name)</description>
+    <group>pci_dss_10.5.5,nist_800_53_CM-3,nist_800_53_CM-6,hipaa_164.312(b)</group>
+  </rule>
+
+  <!-- port removed from VLAN -->
+  <rule id="110143" level="5">
+    <if_sid>110100</if_sid>
+    <decoded_as>extreme-networks-vlan-port</decoded_as>
+    <field name="exos_vlan_action">removed from</field>
+    <description>Extreme Networks: Port $(exos_port) removed from VLAN $(exos_vlan_name)</description>
+    <group>pci_dss_10.5.5,nist_800_53_CM-3,nist_800_53_CM-6,hipaa_164.312(b)</group>
+  </rule>
+
+  <!-- STP topology change -->
+  <rule id="110150" level="8">
+    <if_sid>110100</if_sid>
+    <decoded_as>extreme-networks-stp-topo</decoded_as>
+    <description>Extreme Networks: STP topology change $(exos_stp_event) on instance $(exos_stp_instance)</description>
+    <group>pci_dss_10.6,nist_800_53_SC-7,nist_800_53_SI-4,hipaa_164.312(b),mitre_t1498</group>
+  </rule>
+
+  <!-- STP port state change -->
+  <rule id="110151" level="3">
+    <if_sid>110100</if_sid>
+    <decoded_as>extreme-networks-stp-state</decoded_as>
+    <description>Extreme Networks: STP instance $(exos_stp_instance) port $(exos_port) now $(exos_stp_state)</description>
+    <group>pci_dss_10.6,nist_800_53_SC-7,hipaa_164.312(b)</group>
+  </rule>
+
+  <!-- multiple STP topology changes - possible loop/attack -->
+  <rule id="110152" level="10" frequency="3" timeframe="60">
+    <if_matched_sid>110150</if_matched_sid>
+    <description>Extreme Networks: Multiple STP topology changes (3+ in 1 min) - possible loop or STP attack</description>
+    <group>pci_dss_10.6,nist_800_53_SC-7,nist_800_53_SI-4,hipaa_164.312(b),mitre_t1498</group>
+  </rule>
+
+  <!-- BGP peer down -->
+  <rule id="110160" level="8">
+    <if_sid>110100</if_sid>
+    <decoded_as>extreme-networks-bgp</decoded_as>
+    <field name="exos_bgp_state">down|Idle|Active</field>
+    <description>Extreme Networks: BGP neighbor $(exos_bgp_peer) went $(exos_bgp_state)</description>
+    <group>pci_dss_10.6,nist_800_53_SC-7,nist_800_53_CP-10,hipaa_164.312(b),mitre_t1499</group>
+  </rule>
+
+  <!-- BGP peer up -->
+  <rule id="110161" level="3">
+    <if_sid>110100</if_sid>
+    <decoded_as>extreme-networks-bgp</decoded_as>
+    <field name="exos_bgp_state">Established|up</field>
+    <description>Extreme Networks: BGP neighbor $(exos_bgp_peer) is $(exos_bgp_state)</description>
+    <group>pci_dss_10.6,nist_800_53_SC-7,nist_800_53_CP-10,hipaa_164.312(b)</group>
+  </rule>
+
+  <!-- OSPF neighbor down -->
+  <rule id="110170" level="8">
+    <if_sid>110100</if_sid>
+    <decoded_as>extreme-networks-ospf</decoded_as>
+    <field name="exos_ospf_state">down|Init|Attempt</field>
+    <description>Extreme Networks: OSPF neighbor $(exos_ospf_neighbor) on $(exos_ospf_iface) $(exos_ospf_state)</description>
+    <group>pci_dss_10.6,nist_800_53_SC-7,nist_800_53_CP-10,hipaa_164.312(b),mitre_t1499</group>
+  </rule>
+
+  <!-- OSPF neighbor up -->
+  <rule id="110171" level="3">
+    <if_sid>110100</if_sid>
+    <decoded_as>extreme-networks-ospf</decoded_as>
+    <field name="exos_ospf_state">Full|TwoWay</field>
+    <description>Extreme Networks: OSPF neighbor $(exos_ospf_neighbor) on $(exos_ospf_iface) reached $(exos_ospf_state)</description>
+    <group>pci_dss_10.6,nist_800_53_SC-7,hipaa_164.312(b)</group>
+  </rule>
+
+  <!-- LACP port state change -->
+  <rule id="110180" level="5">
+    <if_sid>110100</if_sid>
+    <decoded_as>extreme-networks-lacp</decoded_as>
+    <description>Extreme Networks: LACP port $(exos_port) $(exos_lacp_state)</description>
+    <group>pci_dss_10.6,nist_800_53_SC-7,hipaa_164.312(b)</group>
+  </rule>
+
+  <!-- LLDP neighbor event -->
+  <rule id="110190" level="3">
+    <if_sid>110100</if_sid>
+    <decoded_as>extreme-networks-lldp</decoded_as>
+    <description>Extreme Networks: LLDP neighbor $(exos_lldp_neighbor) on port $(exos_port) $(exos_lldp_event)</description>
+    <group>pci_dss_10.6,nist_800_53_CM-8,hipaa_164.310(d)(1)</group>
+  </rule>
+
+  <!-- configuration saved/changed -->
+  <rule id="110200" level="8">
+    <if_sid>110100</if_sid>
+    <decoded_as>extreme-networks-config</decoded_as>
+    <description>Extreme Networks: Configuration $(exos_cfg_action) by user $(exos_user)</description>
+    <group>pci_dss_10.5.5,pci_dss_11.5,nist_800_53_CM-3,nist_800_53_CM-6,nist_800_53_AU-12,hipaa_164.312(b),mitre_t1562</group>
+  </rule>
+
+  <!-- PoE fault -->
+  <rule id="110210" level="7">
+    <if_sid>110100</if_sid>
+    <decoded_as>extreme-networks-poe</decoded_as>
+    <field name="exos_poe_state">fault|exceeded</field>
+    <description>Extreme Networks: PoE fault or budget exceeded on port $(exos_port)</description>
+    <group>pci_dss_10.6,nist_800_53_PE-1,hipaa_164.310(a)(2)(ii),mitre_t1200</group>
+  </rule>
+
+  <!-- PoE port powered on/off -->
+  <rule id="110211" level="3">
+    <if_sid>110100</if_sid>
+    <decoded_as>extreme-networks-poe</decoded_as>
+    <field name="exos_poe_state">powered on|powered off</field>
+    <description>Extreme Networks: PoE port $(exos_port) $(exos_poe_state)</description>
+    <group>pci_dss_10.6,nist_800_53_PE-1,hipaa_164.310(a)(2)(ii)</group>
+  </rule>
+
+  <!-- catch-all for unmatched ExtremeXOS events -->
+  <rule id="110299" level="2">
+    <if_sid>110100</if_sid>
+    <decoded_as>extreme-networks-generic</decoded_as>
+    <description>Extreme Networks: $(exos_event) - $(exos_message)</description>
+  </rule>
+
+</group>

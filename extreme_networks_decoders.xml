@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Extreme Networks ExtremeXOS syslog decoder examples
+Jun 01 07:35:18 X440G2-2 vlan.msgs.portLinkStateUp: Port 1:1 link up
+Jun 01 07:35:19 X440G2-2 vlan.msgs.portLinkStateDown: Port 1:1 link down
+Jun 01 07:36:20 X440G2-2 VLAN.VlanCreated: VLAN 100 created
+Jun 01 07:36:40 X440G2-2 STP.PortStateChange: Instance 0 port 1:1 is now forwarding
+May 22 11:14:58 SwitchName EXOS-AUTH: Authentication successful for user admin from 10.1.1.2
+May 22 11:15:23 SwitchName EXOS-FILEMGMT: cli.logRemoteCmd: User admin exec "show configuration" from 10.1.1.2
+-->
+
+<!-- base parent decoder: match any ExtremeXOS syslog line by program name pattern -->
+<decoder name="extreme-networks">
+  <prematch>EXOS|vlan\.msgs\.|HAL\.Port\.|VLAN\.|STP\.|AAA\.|BGP\.|OSPF\.|MSTP\.|LACP\.|LLDP\.</prematch>
+</decoder>
+
+<!-- authentication events -->
+<decoder name="extreme-networks-auth">
+  <parent>extreme-networks</parent>
+  <prematch>EXOS-AUTH</prematch>
+  <regex type="pcre2">Authentication (\w+) for user (\S+) from ((?:(?:\d{1,3}\.){3}\d{1,3}|[0-9a-fA-F:]{2,39}))</regex>
+  <order>exos_auth_result, exos_user, srcip</order>
+</decoder>
+
+<decoder name="extreme-networks-auth-local">
+  <parent>extreme-networks</parent>
+  <prematch>EXOS-AUTH</prematch>
+  <regex type="pcre2">Authentication (\w+) for user (\S+) \(local\)</regex>
+  <order>exos_auth_result, exos_user</order>
+</decoder>
+
+<decoder name="extreme-networks-auth-logout">
+  <parent>extreme-networks</parent>
+  <prematch>EXOS-AUTH</prematch>
+  <regex type="pcre2">User (\S+) logged out from ((?:(?:\d{1,3}\.){3}\d{1,3}|[0-9a-fA-F:]{2,39}))</regex>
+  <order>exos_user, srcip</order>
+</decoder>
+
+<!-- CLI command logging -->
+<decoder name="extreme-networks-cli">
+  <parent>extreme-networks</parent>
+  <prematch>cli\.logRemoteCmd</prematch>
+  <regex type="pcre2">User (\S+) exec "([^"]+)" from ((?:(?:\d{1,3}\.){3}\d{1,3}|[0-9a-fA-F:]{2,39}))</regex>
+  <order>exos_user, exos_cmd, srcip</order>
+</decoder>
+
+<decoder name="extreme-networks-cli-local">
+  <parent>extreme-networks</parent>
+  <prematch>cli\.logLocalCmd</prematch>
+  <regex type="pcre2">User (\S+) exec "([^"]+)"</regex>
+  <order>exos_user, exos_cmd</order>
+</decoder>
+
+<!-- port link state events -->
+<decoder name="extreme-networks-port">
+  <parent>extreme-networks</parent>
+  <prematch>vlan\.msgs\.portLinkState|HAL\.Port\.Link</prematch>
+  <regex type="pcre2">Port (\d+(?::\d+)?) link (up|down)</regex>
+  <order>exos_port, exos_link_state</order>
+</decoder>
+
+<!-- VLAN events -->
+<decoder name="extreme-networks-vlan-created">
+  <parent>extreme-networks</parent>
+  <prematch>VLAN\.VlanCreated</prematch>
+  <regex type="pcre2">VLAN (\d+) created</regex>
+  <order>exos_vlan_id</order>
+</decoder>
+
+<decoder name="extreme-networks-vlan-deleted">
+  <parent>extreme-networks</parent>
+  <prematch>VLAN\.VlanDeleted</prematch>
+  <regex type="pcre2">VLAN (\d+) deleted</regex>
+  <order>exos_vlan_id</order>
+</decoder>
+
+<decoder name="extreme-networks-vlan-port">
+  <parent>extreme-networks</parent>
+  <prematch>VLAN\.</prematch>
+  <regex type="pcre2">Port (\d+(?::\d+)?) (added to|removed from) VLAN (\w+)</regex>
+  <order>exos_port, exos_vlan_action, exos_vlan_name</order>
+</decoder>
+
+<!-- Spanning Tree events -->
+<decoder name="extreme-networks-stp-state">
+  <parent>extreme-networks</parent>
+  <prematch>STP\.PortStateChange|MSTP\.PortStateChange</prematch>
+  <regex type="pcre2">Instance (\d+) port (\d+(?::\d+)?) is now (\w+)</regex>
+  <order>exos_stp_instance, exos_port, exos_stp_state</order>
+</decoder>
+
+<decoder name="extreme-networks-stp-topo">
+  <parent>extreme-networks</parent>
+  <prematch>STP\.TopologyChange|MSTP\.TopologyChange</prematch>
+  <regex type="pcre2">Topology change (\w+) on instance (\d+)</regex>
+  <order>exos_stp_event, exos_stp_instance</order>
+</decoder>
+
+<!-- BGP events -->
+<decoder name="extreme-networks-bgp">
+  <parent>extreme-networks</parent>
+  <prematch>BGP\.</prematch>
+  <regex type="pcre2">BGP neighbor ((?:(?:\d{1,3}\.){3}\d{1,3}|[0-9a-fA-F:]{2,39})) (\w+)</regex>
+  <order>exos_bgp_peer, exos_bgp_state</order>
+</decoder>
+
+<!-- OSPF events -->
+<decoder name="extreme-networks-ospf">
+  <parent>extreme-networks</parent>
+  <prematch>OSPF\.</prematch>
+  <regex type="pcre2">OSPF neighbor ((?:(?:\d{1,3}\.){3}\d{1,3}|[0-9a-fA-F:]{2,39})) on interface (\S+) (\w+)</regex>
+  <order>exos_ospf_neighbor, exos_ospf_iface, exos_ospf_state</order>
+</decoder>
+
+<!-- LACP events -->
+<decoder name="extreme-networks-lacp">
+  <parent>extreme-networks</parent>
+  <prematch>LACP\.</prematch>
+  <regex type="pcre2">LACP port (\d+(?::\d+)?) (\w+)</regex>
+  <order>exos_port, exos_lacp_state</order>
+</decoder>
+
+<!-- LLDP neighbor events -->
+<decoder name="extreme-networks-lldp">
+  <parent>extreme-networks</parent>
+  <prematch>LLDP\.</prematch>
+  <regex type="pcre2">LLDP neighbor ([\w\-\.]+) on port (\d+(?::\d+)?) (\w+)</regex>
+  <order>exos_lldp_neighbor, exos_port, exos_lldp_event</order>
+</decoder>
+
+<!-- system / config save -->
+<decoder name="extreme-networks-config">
+  <parent>extreme-networks</parent>
+  <prematch>EXOS-FILEMGMT|Configuration</prematch>
+  <regex type="pcre2">Configuration (saved|uploaded|downloaded|changed) by user (\S+)</regex>
+  <order>exos_cfg_action, exos_user</order>
+</decoder>
+
+<!-- PoE events -->
+<decoder name="extreme-networks-poe">
+  <parent>extreme-networks</parent>
+  <prematch>HAL\.Port\.Poe|PoE\.</prematch>
+  <regex type="pcre2">PoE port (\d+(?::\d+)?) (powered on|powered off|fault|exceeded)</regex>
+  <order>exos_port, exos_poe_state</order>
+</decoder>
+
+<!-- generic catch-all: extract severity and message body -->
+<decoder name="extreme-networks-generic">
+  <parent>extreme-networks</parent>
+  <regex type="pcre2">(\w[\w\.\-]+):\s+((?:Info|Notice|Warning|Error|Critical|Debug)\s+)?(.+)$</regex>
+  <order>exos_event, exos_severity, exos_message</order>
+</decoder>
