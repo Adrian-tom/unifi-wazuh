@@ -11,7 +11,7 @@
   <rule id="110101" level="3">
     <if_sid>110100</if_sid>
     <decoded_as>extreme-networks-auth</decoded_as>
-    <field name="exos_auth_result">successful</field>
+    <field name="exos_auth_result">successful|passed</field>
     <description>Extreme Networks: Authentication successful for user $(exos_user) from $(srcip)</description>
     <group>pci_dss_10.2.5,nist_800_53_IA-2,nist_800_53_AU-3,hipaa_164.312(d),mitre_t1078</group>
   </rule>
@@ -29,7 +29,7 @@
   <rule id="110103" level="3">
     <if_sid>110100</if_sid>
     <decoded_as>extreme-networks-auth-local</decoded_as>
-    <field name="exos_auth_result">successful</field>
+    <field name="exos_auth_result">successful|passed</field>
     <description>Extreme Networks: Local authentication successful for user $(exos_user)</description>
     <group>pci_dss_10.2.5,nist_800_53_IA-2,nist_800_53_AU-3,hipaa_164.312(d),mitre_t1078</group>
   </rule>
@@ -87,7 +87,7 @@
   <rule id="110130" level="8">
     <if_sid>110100</if_sid>
     <decoded_as>extreme-networks-port</decoded_as>
-    <field name="exos_link_state">down</field>
+    <field name="exos_link_state">down|DOWN</field>
     <description>Extreme Networks: Port $(exos_port) link DOWN</description>
     <group>pci_dss_10.6,nist_800_53_CP-10,nist_800_53_SI-4,hipaa_164.312(b),mitre_t1498</group>
   </rule>
@@ -96,7 +96,7 @@
   <rule id="110131" level="3">
     <if_sid>110100</if_sid>
     <decoded_as>extreme-networks-port</decoded_as>
-    <field name="exos_link_state">up</field>
+    <field name="exos_link_state">up|UP</field>
     <description>Extreme Networks: Port $(exos_port) link UP</description>
     <group>pci_dss_10.6,nist_800_53_CP-10,nist_800_53_SI-4,hipaa_164.312(b)</group>
   </rule>
